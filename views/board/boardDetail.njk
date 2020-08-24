@@ -1,0 +1,108 @@
+{% extends "layout.njk" %}
+{% block contents %}
+
+  <section>
+    <div class='main-header'>
+      <h1>{{board.title}}</h1>
+      <div>
+
+        <a href="/board/{{board.id}}/edit" class="btn btn-outline-success">
+          글 수정
+        </a>
+        <form method="POST" action='/board/{{board.id}}/delete'>
+          <button type='submit' class="btn btn-outline-danger">
+            글 삭제
+          </button>
+        </form>
+      </div>
+    </div>
+    <hr/>
+    <div class="main-content">
+      {{board.content}}
+    </div>
+    <div class='sub-content'>
+      <div class="container">
+        <div class="row bootstrap snippets bootdeys">
+          <div class="col-md-12 col-sm-12">
+            <div class="comment-wrapper">
+              <div class="panel panel-info">
+                <div class="panel-body">
+                  <textarea id="comment_text" class="form-control" placeholder="write a comment..." rows="3"></textarea>
+                  <br>
+                  <button id="comment_submit_btn" type="button" class="btn btn-info pull-right">Post</button>
+                  <div class="clearfix"></div>
+                  <hr>
+                  <ul class="media-list" id="comment-wrap">
+                    {% for comment in board.commentList %}
+                      <li class="media" data-comment-id="{{comment.id}}" id="comment-{{comment.id}}">
+                        {# <img style="margin-right:10px;" src="https://bootdey.com/img/Content/user_3.jpg" alt="" class="img-circle"> #}
+                        <div class="media-body">
+                          <span class="text-muted pull-right">
+                            <small class="text-muted">{{comment.updatedAt}}</small>
+                            <a onclick="javascript:removeComment({{comment.id}})" class='btn btn-sm btn-danger'>삭제</a>
+                          </span>
+                          <p>
+                            {{ comment.content }}
+                          </p>
+                        </div>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+{% endblock contents %}
+
+{%block extra_scripts%}
+  <script>
+    function removeComment(commentId) {
+      $.ajax({
+        url: `http://localhost:3000/board/comment/${commentId}`,
+        type: 'DELETE',
+        success: function (data) {
+          $(`li#comment-${commentId}`).remove();
+        },
+        error: function (err) {}
+      })
+    }
+    function addComment(content, datetime) {
+      const commentLi = `<li class="media">
+                        <div class="media-body">
+                          <span class="text-muted pull-right">
+                            <small class="text-muted">${datetime}</small>
+                          </span>
+                          <p>
+                            ${content}
+                          </p>
+                        </div>
+                      </li>`;
+      $('#comment-wrap').append(commentLi);
+    }
+    $('#comment_submit_btn').click(function (e) {
+      const commentText = $('#comment_text').val();
+      const data = {
+        comment: commentText
+      }
+      $.ajax({
+        data: data,
+        url: 'http://localhost:3000/board/{{board.id}}/comment',
+        type: 'POST',
+        success: function (data) {
+          console.log(data);
+          addComment(data.content, data.updatedAt);
+          $('#comment_text').val("");
+        },
+        error: function (err) {
+          console.error(err);
+        }
+      })
+    });
+  </script>
+{%endblock extra_scripts%}
